@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#667eea">
+    <meta name="description" content="Diet Tracker - Twój osobisty tracker diety z powiadomieniami">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Diet Tracker">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAJySURBVHgB7VdNTsJAFH4zLRS3LoQDB+AEegK5gZ4AbwAnkBvoCfQEcgNvIDfQE8AJ9AR6ArqBZQtT3rMzFKYt0EIhJn6Jmcx7M/P9vXkzwD8bRqPRE8/zHnieL6LovpOmaZznOeq6jizLIpZl7TRNsxuNxu/r3hEKhVgURT8cx3mRJGnZ7XafuPLAMAy0Wq2wLMs7juM8dTqddqVScTzPQxRFKIoC0zRBkgTHcT6rqqpfLBb9er3+QWsE3W73rVAovFOjH+PxWKNt13Xhui6SJMmq67p7Pp/BcZwPSZJe6/X6G7dcaTabz7Isf9M7xvnDZDLBbDYjl+yZYxDk83+1Wu2NTgCz2fxQFOWbjlWtVtu/BWi1WgiCIJjP5zhXq9VntVrdUYBpmh80GZfL5b2qqmu6C4LgOAzDY6/Xe6J1glarVd4Xi8UOl4CiKCjLMnieD8uycDgckGUZFEXBYrGApmngOd7v4XA40BpBqVR6JnWeqOIkSRCG4XEniqJDYhEEAViWhUKhcGqfL8uyWCwWP2kNns/nT5xzxHEMXdfBMAy2220WRRHY9u+vLsvy+//f3iIIgn8vEYYhLy8vp+t0OsVwOMRisUCaplkQBGBZFpqmgWVZ7Ha7/W6325Fut/tEawT1ev2TSvJEO53mfwRN0/6q1eovWiPY7/cfjuOci+I4Pg6HQ+x2u6y4rus4HA4oy/KxKKZpYr1e83q9rtMaQa1We6bKP/EdQAk+yXnyv1wu/7Tb7VdaI6hUKg90Ax6pZ5fL5eus59N0HZPJBJvN5rimaRqazSa63e4brRGUSqUH+l8/LMt6pUpfUuNf+w7wv+0XwW+i1h7SDUsAAAAASUVORK5CYII=">
+    <title>Diet Tracker - PWA</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --primary: #667eea;
+            --primary-dark: #5568d3;
+            --secondary: #764ba2;
+            --success: #48bb78;
+            --warning: #ed8936;
+            --danger: #f56565;
+            --gray-50: #f7fafc;
+            --gray-100: #edf2f7;
+            --gray-200: #e2e8f0;
+            --gray-300: #cbd5e0;
+            --gray-600: #718096;
+            --gray-800: #2d3748;
+            --gray-900: #1a202c;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            min-height: 100vh;
+            padding-bottom: 80px;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 50px rgba(0,0,0,0.3);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            font-size: 1.5em;
+            margin-bottom: 5px;
+        }
+        
+        .clock {
+            font-size: 2.5em;
+            font-weight: bold;
+            text-align: center;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            letter-spacing: 2px;
+        }
+        
+        .fasting-status {
+            text-align: center;
+            padding: 15px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 12px;
+            margin-top: 10px;
+        }
+        
+        .fasting-status h3 {
+            font-size: 0.9em;
+            margin-bottom: 5px;
+            opacity: 0.9;
+        }
+        
+        .fasting-status .status {
+            font-size: 1.3em;
+            font-weight: bold;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            padding: 20px;
+            background: var(--gray-50);
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .stat-card h3 {
+            color: var(--gray-600);
+            font-size: 0.75em;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+        }
+        
+        .stat-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: var(--primary);
+            margin-bottom: 5px;
+        }
+        
+        .stat-limit {
+            color: var(--gray-600);
+            font-size: 0.85em;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: var(--gray-200);
+            border-radius: 3px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            transition: width 0.3s ease;
+            border-radius: 3px;
+        }
+        
+        .progress-fill.warning {
+            background: linear-gradient(90deg, var(--warning), var(--danger));
+        }
+        
+        .content {
+            padding: 20px;
+        }
+        
+        .warning-alert {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 600;
+            color: #856404;
+        }
+        
+        .meals-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .meal-section {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .meal-header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .meal-time {
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+        
+        .add-btn {
+            background: white;
+            color: var(--primary);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.3s;
+        }
+        
+        .add-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .meal-items {
+            padding: 15px;
+            background: var(--gray-50);
+        }
+        
+        .meal-item {
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .item-info {
+            flex: 1;
+        }
+        
+        .item-name {
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: var(--gray-800);
+        }
+        
+        .item-details {
+            font-size: 0.85em;
+            color: var(--gray-600);
+        }
+        
+        .remove-btn {
+            background: var(--danger);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85em;
+            transition: all 0.3s;
+        }
+        
+        .remove-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            box-shadow: 0 -4px 6px rgba(0,0,0,0.1);
+            z-index: 100;
+        }
+        
+        .nav-btn {
+            padding: 12px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            color: var(--gray-600);
+            transition: all 0.3s;
+            font-size: 0.75em;
+        }
+        
+        .nav-btn.active {
+            color: var(--primary);
+            background: var(--gray-50);
+        }
+        
+        .nav-btn .icon {
+            font-size: 1.8em;
+        }
+        
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        
+        .modal.active {
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            width: 100%;
+            max-width: 500px;
+            margin: auto;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 10;
+            border-radius: 20px 20px 0 0;
+        }
+        
+        .modal-header h2 {
+            color: var(--primary);
+            font-size: 1.3em;
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 2em;
+            color: var(--gray-600);
+            cursor: pointer;
+            line-height: 1;
+            padding: 0;
+            width: 40px;
+            height: 40px;
+        }
+        
+        .modal-body {
+            padding: 20px;
+        }
+        
+        .tab-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid var(--gray-300);
+            background: white;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .tab-btn.active {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            border-color: var(--primary);
+        }
+        
+        .search-box {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--gray-300);
+            border-radius: 10px;
+            font-size: 1em;
+            margin-bottom: 15px;
+        }
+        
+        .search-box:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        
+        .category-tabs {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+        
+        .category-tab {
+            padding: 8px 16px;
+            border: 2px solid var(--gray-300);
+            background: white;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.85em;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .category-tab.active {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            border-color: var(--primary);
+        }
+        
+        .food-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .food-item {
+            padding: 12px;
+            border: 2px solid var(--gray-200);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: white;
+        }
+        
+        .food-item:active {
+            transform: scale(0.98);
+        }
+        
+        .food-item.selected {
+            border-color: var(--primary);
+            background: #e8ecff;
+        }
+        
+        .food-name {
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: var(--gray-800);
+        }
+        
+        .food-nutrition {
+            font-size: 0.85em;
+            color: var(--gray-600);
+        }
+        
+        .portion-selector {
+            margin-top: 20px;
+            padding: 15px;
+            background: var(--gray-50);
+            border-radius: 10px;
+        }
+        
+        .portion-input {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .portion-input input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid var(--gray-300);
+            border-radius: 8px;
+            font-size: 1em;
+        }
+        
+        .confirm-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 1.1em;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s;
+        }
+        
+        .confirm-btn:active {
+            transform: scale(0.98);
+        }
+        
+        .confirm-btn:disabled {
+            background: var(--gray-300);
+            cursor: not-allowed;
+        }
+        
+        .install-prompt {
+            position: fixed;
+            bottom: 80px;
+            left: 20px;
+            right: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            display: none;
+            z-index: 999;
+        }
+        
+        .install-prompt.active {
+            display: block;
+            animation: slideUp 0.3s ease;
+        }
+        
+        @keyframes slideUp {
+            from { transform: translateY(100px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .install-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .install-buttons button {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        .install-yes {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .install-no {
+            background: var(--gray-200);
+            color: var(--gray-800);
+        }
+        
+        .notification-banner {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            text-align: center;
+            font-size: 0.9em;
+        }
+        
+        .enable-notifications-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+        
+        .settings-section {
+            margin-bottom: 25px;
+        }
+        
+        .settings-section h3 {
+            color: var(--primary);
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+        
+        .setting-item {
+            margin-bottom: 15px;
+        }
+        
+        .setting-item label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: var(--gray-700);
+        }
+        
+        .setting-item input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid var(--gray-300);
+            border-radius: 8px;
+            font-size: 1em;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🍎 Diet Tracker</h1>
+            <div class="clock" id="clock">00:00:00</div>
+            <div class="fasting-status">
+                <h3>🍽️ Dieta 16/8</h3>
+                <div class="status" id="fastingStatus">✅ Okno żywieniowe</div>
+                <div id="fastingTime" style="margin-top: 5px; font-size: 0.9em;"></div>
+                <div style="margin-top: 5px; font-size: 0.9em;">Jedz: 09:00 - 17:00</div>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Kalorie</h3>
+                <div class="stat-value" id="totalKcal">0</div>
+                <div class="stat-limit">z <span id="targetKcal">1800</span> kcal</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="kcalProgress"></div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <h3>Węglowodany</h3>
+                <div class="stat-value" id="totalCarbs">0</div>
+                <div class="stat-limit">z <span id="targetCarbs">200</span>g</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="carbsProgress"></div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <h3>Białko</h3>
+                <div class="stat-value" id="totalProtein">0</div>
+                <div class="stat-limit">z <span id="targetProtein">90</span>g</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="proteinProgress"></div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <h3>Tłuszcze</h3>
+                <div class="stat-value" id="totalFat">0</div>
+                <div class="stat-limit">z <span id="targetFat">60</span>g</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="fatProgress"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content">
+            <div id="warningAlert" class="warning-alert hidden">
+                ⚠️ Zbliżasz się do dziennego limitu kalorii!
+            </div>
+
+            <div id="notificationBanner" class="notification-banner hidden">
+                🔔 Włącz powiadomienia aby otrzymywać przypomnienia o posiłkach!
+                <br>
+                <button class="enable-notifications-btn" onclick="requestNotificationPermission()">
+                    Włącz powiadomienia
+                </button>
+            </div>
+
+            <div id="diaryView" class="meals-list">
+                <!-- Meals will be rendered here -->
+            </div>
+
+            <div id="settingsView" class="hidden">
+                <div class="settings-section">
+                    <h3>⏱️ Okno żywieniowe 16/8</h3>
+                    <div class="setting-item">
+                        <label>Początek okna żywieniowego:</label>
+                        <input type="time" id="fastingEnd" value="09:00">
+                    </div>
+                    <div class="setting-item">
+                        <label>Koniec okna żywieniowego:</label>
+                        <input type="time" id="fastingStart" value="17:00">
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h3>🎯 Cele dietetyczne</h3>
+                    <div class="setting-item">
+                        <label>Kalorie dziennie:</label>
+                        <input type="number" id="settingKcal" value="1800">
+                    </div>
+                    <div class="setting-item">
+                        <label>Węglowodany (g):</label>
+                        <input type="number" id="settingCarbs" value="200">
+                    </div>
+                    <div class="setting-item">
+                        <label>Białko (g):</label>
+                        <input type="number" id="settingProtein" value="90">
+                    </div>
+                    <div class="setting-item">
+                        <label>Tłuszcze (g):</label>
+                        <input type="number" id="settingFat" value="60">
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h3>⏰ Godziny posiłków</h3>
+                    <div class="setting-item">
+                        <label>🥐 Śniadanie:</label>
+                        <input type="time" id="breakfastTime" value="09:00">
+                    </div>
+                    <div class="setting-item">
+                        <label>🍎 Przekąska 1:</label>
+                        <input type="time" id="snack1Time" value="11:30">
+                    </div>
+                    <div class="setting-item">
+                        <label>🍽️ Obiad:</label>
+                        <input type="time" id="lunchTime" value="13:00">
+                    </div>
+                    <div class="setting-item">
+                        <label>🥤 Przekąska 2:</label>
+                        <input type="time" id="snack2Time" value="15:30">
+                    </div>
+                    <div class="setting-item">
+                        <label>🌙 Kolacja:</label>
+                        <input type="time" id="dinnerTime" value="16:30">
+                    </div>
+                </div>
+
+                <button class="confirm-btn" id="saveSettingsBtn">💾 Zapisz ustawienia</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="bottom-nav">
+        <button class="nav-btn active" onclick="switchTab('diary')">
+            <div class="icon">📅</div>
+            <div>Dziennik</div>
+        </button>
+        <button class="nav-btn" onclick="switchTab('add')">
+            <div class="icon">➕</div>
+            <div>Dodaj</div>
+        </button>
+        <button class="nav-btn" onclick="switchTab('settings')">
+            <div class="icon">⚙️</div>
+            <div>Ustawienia</div>
+        </button>
+    </div>
+
+    <!-- Modal for adding food -->
+    <div id="addModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Dodaj posiłek</h2>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="tab-buttons">
+                    <button class="tab-btn active" onclick="switchModalTab('ready')">Gotowe posiłki</button>
+                    <button class="tab-btn" onclick="switchModalTab('products')">Produkty</button>
+                    <button class="tab-btn" onclick="switchModalTab('ai')">🎤 Powiedz co zjadłeś</button>
+                </div>
+
+                <div id="aiTab" class="hidden">
+                    <div style="text-align: center; padding: 20px;">
+                        <div style="font-size: 3em; margin-bottom: 20px;">🎤</div>
+                        <h3 style="color: var(--primary); margin-bottom: 15px;">Powiedz co zjadłeś</h3>
+                        <p style="color: var(--gray-600); margin-bottom: 20px;">
+                            Opisz swój posiłek tekstem, a AI automatycznie rozpozna produkty i policzy kalorie!
+                        </p>
+                        
+                        <textarea 
+                            id="aiInput" 
+                            placeholder="Np: 'Zjadłem dwa jajka na twardo, dwie kromki chleba żytniego z masłem i pomidora'"
+                            style="width: 100%; min-height: 120px; padding: 15px; border: 2px solid var(--gray-300); border-radius: 10px; font-size: 1em; resize: vertical;"
+                        ></textarea>
+                        
+                        <button class="confirm-btn" onclick="analyzeFood()" style="margin-top: 15px;">
+                            🤖 Rozpoznaj i dodaj posiłek
+                        </button>
+                        
+                        <div id="aiResults" class="hidden" style="margin-top: 20px; padding: 20px; background: var(--gray-50); border-radius: 10px; text-align: left;">
+                            <h4 style="color: var(--primary); margin-bottom: 15px;">Rozpoznane produkty:</h4>
+                            <div id="aiResultsList"></div>
+                            <div style="margin-top: 15px; padding: 15px; background: white; border-radius: 8px; font-weight: bold;">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                    <span>Łącznie:</span>
+                                    <span id="aiTotalKcal">0 kcal</span>
+                                </div>
+                                <div style="font-size: 0.9em; color: var(--gray-600);">
+                                    W: <span id="aiTotalCarbs">0</span>g | 
+                                    B: <span id="aiTotalProtein">0</span>g | 
+                                    T: <span id="aiTotalFat">0</span>g
+                                </div>
+                            </div>
+                            <button class="confirm-btn" onclick="confirmAiMeal()" style="margin-top: 15px;">
+                                ✅ Potwierdź i dodaj
+                            </button>
+                        </div>
+                        
+                        <div id="aiLoading" class="hidden" style="margin-top: 20px; padding: 20px;">
+                            <div style="font-size: 2em; animation: spin 1s linear infinite;">⚙️</div>
+                            <p style="margin-top: 10px; color: var(--gray-600);">Analizuję twój posiłek...</p>
+                        </div>
+                        
+                        <div style="margin-top: 20px; padding: 15px; background: #e8f5e9; border-radius: 8px; font-size: 0.9em; text-align: left;">
+                            <strong>💡 Przykłady:</strong><br>
+                            • "300g piersi z kurczaka, 200g ryżu i sałatka"<br>
+                            • "owsianka z bananem i mlekiem"<br>
+                            • "2 jajka, kromka chleba, pomidor"<br>
+                            • "jogurt naturalny z 20g migdałów"
+                        </div>
+                    </div>
+                </div>
+
+                <div id="readyMealsTab">
+                    <div class="food-list" id="readyMealsList"></div>
+                </div>
+
+                <div id="productsTab" class="hidden">
+                    <input type="text" class="search-box" id="searchBox" placeholder="Szukaj produktu..." oninput="filterProducts()">
+                    
+                    <div class="category-tabs" id="categoryTabs"></div>
+                    
+                    <div class="food-list" id="productsList"></div>
+                    
+                    <div id="portionSelector" class="portion-selector hidden">
+                        <h3 id="selectedProductName"></h3>
+                        <div class="portion-input">
+                            <label>Porcja (g):</label>
+                            <input type="number" id="portionInput" value="100" min="1">
+                        </div>
+                        <div id="nutritionPreview" style="margin-top: 10px; padding: 10px; background: white; border-radius: 8px;"></div>
+                        <button class="confirm-btn" onclick="addSelectedFood()">Dodaj do posiłku</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Install prompt -->
+    <div id="installPrompt" class="install-prompt">
+        <strong>📱 Zainstaluj Diet Tracker</strong>
+        <p style="margin: 8px 0; font-size: 0.9em;">Dodaj aplikację do ekranu głównego dla łatwiejszego dostępu!</p>
+        <div class="install-buttons">
+            <button class="install-yes" onclick="installApp()">Zainstaluj</button>
+            <button class="install-no" onclick="dismissInstall()">Później</button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script src="app-ai.js"></script>
+    <script>
+        // Register service worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js')
+                .then(reg => console.log('Service Worker registered', reg))
+                .catch(err => console.error('Service Worker registration failed', err));
+        }
+    </script>
+</body>
+</html>
