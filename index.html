@@ -595,6 +595,11 @@
         .hidden {
             display: none;
         }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
@@ -671,130 +676,4 @@
                     </div>
                     <div class="setting-item">
                         <label>Koniec okna żywieniowego:</label>
-                        <input type="time" id="fastingStart" value="17:00">
-                    </div>
-                </div>
-
-                <div class="settings-section">
-                    <h3>🎯 Cele dietetyczne</h3>
-                    <div class="setting-item">
-                        <label>Kalorie dziennie:</label>
-                        <input type="number" id="settingKcal" value="1800">
-                    </div>
-                    <div class="setting-item">
-                        <label>Węglowodany (g):</label>
-                        <input type="number" id="settingCarbs" value="200">
-                    </div>
-                    <div class="setting-item">
-                        <label>Białko (g):</label>
-                        <input type="number" id="settingProtein" value="90">
-                    </div>
-                    <div class="setting-item">
-                        <label>Tłuszcze (g):</label>
-                        <input type="number" id="settingFat" value="60">
-                    </div>
-                </div>
-
-                <div class="settings-section">
-                    <h3>⏰ Godziny posiłków</h3>
-                    <div class="setting-item">
-                        <label>🥐 Śniadanie:</label>
-                        <input type="time" id="breakfastTime" value="09:00">
-                    </div>
-                    <div class="setting-item">
-                        <label>🍎 Przekąska 1:</label>
-                        <input type="time" id="snack1Time" value="11:30">
-                    </div>
-                    <div class="setting-item">
-                        <label>🍽️ Obiad:</label>
-                        <input type="time" id="lunchTime" value="13:00">
-                    </div>
-                    <div class="setting-item">
-                        <label>🥤 Przekąska 2:</label>
-                        <input type="time" id="snack2Time" value="15:30">
-                    </div>
-                    <div class="setting-item">
-                        <label>🌙 Kolacja:</label>
-                        <input type="time" id="dinnerTime" value="16:30">
-                    </div>
-                </div>
-
-                <button class="confirm-btn" onclick="saveSettings()">💾 Zapisz ustawienia</button>
-            </div>
-        </div>
-    </div>
-
-    <div class="bottom-nav">
-        <button class="nav-btn active" onclick="switchTab('diary')">
-            <div class="icon">📅</div>
-            <div>Dziennik</div>
-        </button>
-        <button class="nav-btn" onclick="switchTab('add')">
-            <div class="icon">➕</div>
-            <div>Dodaj</div>
-        </button>
-        <button class="nav-btn" onclick="switchTab('settings')">
-            <div class="icon">⚙️</div>
-            <div>Ustawienia</div>
-        </button>
-    </div>
-
-    <!-- Modal for adding food -->
-    <div id="addModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Dodaj posiłek</h2>
-                <button class="close-btn" onclick="closeModal()">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="tab-buttons">
-                    <button class="tab-btn active" onclick="switchModalTab('ready')">Gotowe posiłki</button>
-                    <button class="tab-btn" onclick="switchModalTab('products')">Produkty</button>
-                </div>
-
-                <div id="readyMealsTab">
-                    <div class="food-list" id="readyMealsList"></div>
-                </div>
-
-                <div id="productsTab" class="hidden">
-                    <input type="text" class="search-box" id="searchBox" placeholder="Szukaj produktu..." oninput="filterProducts()">
-                    
-                    <div class="category-tabs" id="categoryTabs"></div>
-                    
-                    <div class="food-list" id="productsList"></div>
-                    
-                    <div id="portionSelector" class="portion-selector hidden">
-                        <h3 id="selectedProductName"></h3>
-                        <div class="portion-input">
-                            <label>Porcja (g):</label>
-                            <input type="number" id="portionInput" value="100" min="1">
-                        </div>
-                        <div id="nutritionPreview" style="margin-top: 10px; padding: 10px; background: white; border-radius: 8px;"></div>
-                        <button class="confirm-btn" onclick="addSelectedFood()">Dodaj do posiłku</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Install prompt -->
-    <div id="installPrompt" class="install-prompt">
-        <strong>📱 Zainstaluj Diet Tracker</strong>
-        <p style="margin: 8px 0; font-size: 0.9em;">Dodaj aplikację do ekranu głównego dla łatwiejszego dostępu!</p>
-        <div class="install-buttons">
-            <button class="install-yes" onclick="installApp()">Zainstaluj</button>
-            <button class="install-no" onclick="dismissInstall()">Później</button>
-        </div>
-    </div>
-
-    <script src="app.js"></script>
-    <script>
-        // Register service worker
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js')
-                .then(reg => console.log('Service Worker registered', reg))
-                .catch(err => console.error('Service Worker registration failed', err));
-        }
-    </script>
-</body>
-</html>
+      
