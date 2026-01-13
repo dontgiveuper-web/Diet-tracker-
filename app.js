@@ -1,0 +1,898 @@
+// Diet Tracker PWA - Main Application Logic
+
+// Database configuration
+const DB_NAME = 'DietTrackerDB';
+const DB_VERSION = 1;
+let db;
+
+// Food database
+const FOOD_DATABASE = {
+    owoce: [
+        { name: 'Jabłko', kcal: 52, carbs: 14, protein: 0.3, fat: 0.2 },
+        { name: 'Banan', kcal: 89, carbs: 23, protein: 1.1, fat: 0.3 },
+        { name: 'Pomarańcza', kcal: 47, carbs: 12, protein: 0.9, fat: 0.1 },
+        { name: 'Gruszka', kcal: 57, carbs: 15, protein: 0.4, fat: 0.1 },
+        { name: 'Truskawki', kcal: 32, carbs: 8, protein: 0.7, fat: 0.3 },
+        { name: 'Maliny', kcal: 52, carbs: 12, protein: 1.2, fat: 0.7 },
+        { name: 'Borówki', kcal: 57, carbs: 14, protein: 0.7, fat: 0.3 },
+        { name: 'Arbuz', kcal: 30, carbs: 8, protein: 0.6, fat: 0.2 },
+        { name: 'Winogrona', kcal: 69, carbs: 18, protein: 0.7, fat: 0.2 },
+        { name: 'Kiwi', kcal: 61, carbs: 15, protein: 1.1, fat: 0.5 }
+    ],
+    warzywa: [
+        { name: 'Pomidor', kcal: 18, carbs: 4, protein: 0.9, fat: 0.2 },
+        { name: 'Ogórek', kcal: 15, carbs: 3.6, protein: 0.7, fat: 0.1 },
+        { name: 'Papryka czerwona', kcal: 31, carbs: 6, protein: 1, fat: 0.3 },
+        { name: 'Marchew', kcal: 41, carbs: 10, protein: 0.9, fat: 0.2 },
+        { name: 'Brokuły', kcal: 34, carbs: 7, protein: 2.8, fat: 0.4 },
+        { name: 'Kalafior', kcal: 25, carbs: 5, protein: 1.9, fat: 0.3 },
+        { name: 'Sałata', kcal: 15, carbs: 2.9, protein: 1.4, fat: 0.2 },
+        { name: 'Szpinak', kcal: 23, carbs: 3.6, protein: 2.9, fat: 0.4 },
+        { name: 'Cukinia', kcal: 17, carbs: 3.1, protein: 1.2, fat: 0.3 },
+        { name: 'Buraki', kcal: 43, carbs: 10, protein: 1.6, fat: 0.2 }
+    ],
+    mieso: [
+        { name: 'Pierś z kurczaka', kcal: 165, carbs: 0, protein: 31, fat: 3.6 },
+        { name: 'Udko z kurczaka', kcal: 209, carbs: 0, protein: 26, fat: 11 },
+        { name: 'Schab wieprzowy', kcal: 143, carbs: 0, protein: 21, fat: 6 },
+        { name: 'Polędwica wieprzowa', kcal: 143, carbs: 0, protein: 21, fat: 6 },
+        { name: 'Wołowina rostbef', kcal: 250, carbs: 0, protein: 26, fat: 16 },
+        { name: 'Indyk pierś', kcal: 135, carbs: 0, protein: 30, fat: 1 }
+    ],
+    ryby: [
+        { name: 'Łosoś', kcal: 208, carbs: 0, protein: 20, fat: 13 },
+        { name: 'Dorsz', kcal: 82, carbs: 0, protein: 18, fat: 0.7 },
+        { name: 'Tuńczyk', kcal: 144, carbs: 0, protein: 23, fat: 5 },
+        { name: 'Makrela', kcal: 205, carbs: 0, protein: 19, fat: 14 },
+        { name: 'Pstrąg', kcal: 119, carbs: 0, protein: 20, fat: 3.5 }
+    ],
+    pieczywo: [
+        { name: 'Chleb żytni', kcal: 259, carbs: 48, protein: 8.5, fat: 3.3 },
+        { name: 'Chleb pszenny', kcal: 265, carbs: 49, protein: 9, fat: 3.2 },
+        { name: 'Chleb graham', kcal: 250, carbs: 44, protein: 9, fat: 4 },
+        { name: 'Bułka pszenna', kcal: 248, carbs: 48, protein: 8, fat: 3.3 }
+    ],
+    nabial: [
+        { name: 'Mleko 2%', kcal: 50, carbs: 4.8, protein: 3.3, fat: 2 },
+        { name: 'Jogurt naturalny', kcal: 61, carbs: 4.7, protein: 3.5, fat: 3.3 },
+        { name: 'Ser biały półtłusty', kcal: 98, carbs: 3.4, protein: 12, fat: 4 },
+        { name: 'Ser żółty Gouda', kcal: 356, carbs: 2.2, protein: 25, fat: 27 },
+        { name: 'Jajko kurze', kcal: 155, carbs: 1.1, protein: 13, fat: 11 }
+    ],
+    ziarna: [
+        { name: 'Ryż biały gotowany', kcal: 130, carbs: 28, protein: 2.7, fat: 0.3 },
+        { name: 'Ryż brązowy gotowany', kcal: 112, carbs: 24, protein: 2.6, fat: 0.9 },
+        { name: 'Kasza gryczana gotowana', kcal: 92, carbs: 20, protein: 3.4, fat: 0.6 },
+        { name: 'Makaron gotowany', kcal: 131, carbs: 25, protein: 5, fat: 1.1 },
+        { name: 'Płatki owsiane', kcal: 389, carbs: 66, protein: 17, fat: 7 }
+    ]
+};
+
+const READY_MEALS = [
+    { name: 'Owsianka z owocami', ingredients: 'Płatki owsiane 50g, mleko 200ml, banan 100g, maliny 50g', kcal: 350, carbs: 58, protein: 14, fat: 8, mealType: 'breakfast' },
+    { name: 'Jajecznica z chlebem', ingredients: 'Jajka 3 szt, chleb żytni 60g, pomidor 100g', kcal: 445, carbs: 32, protein: 26, fat: 24, mealType: 'breakfast' },
+    { name: 'Tost z awokado', ingredients: 'Chleb graham 50g, awokado 80g, jajko 1 szt', kcal: 420, carbs: 35, protein: 18, fat: 24, mealType: 'breakfast' },
+    { name: 'Smoothie bowl', ingredients: 'Banan 120g, truskawki 100g, jogurt 150g', kcal: 380, carbs: 65, protein: 12, fat: 8, mealType: 'breakfast' },
+    
+    { name: 'Kurczak z ryżem i warzywami', ingredients: 'Pierś kurczaka 150g, ryż 150g, brokuły 100g', kcal: 470, carbs: 50, protein: 50, fat: 7, mealType: 'lunch' },
+    { name: 'Łosoś z ziemniakami', ingredients: 'Łosoś 120g, ziemniaki 200g, szpinak 100g', kcal: 520, carbs: 45, protein: 35, fat: 20, mealType: 'lunch' },
+    { name: 'Dorsz z kaszą', ingredients: 'Dorsz 150g, kasza gryczana 150g, surówka 100g', kcal: 450, carbs: 52, protein: 38, fat: 6, mealType: 'lunch' },
+    { name: 'Makaron z sosem', ingredients: 'Makaron 150g, sos pomidorowy 100g, mięso mielone 100g', kcal: 520, carbs: 58, protein: 35, fat: 16, mealType: 'lunch' },
+    
+    { name: 'Sałatka z tuńczykiem', ingredients: 'Tuńczyk 150g, warzywa 200g', kcal: 320, carbs: 12, protein: 38, fat: 14, mealType: 'dinner' },
+    { name: 'Kasza z indykiem', ingredients: 'Indyk 120g, kasza 150g, warzywa 100g', kcal: 380, carbs: 38, protein: 42, fat: 6, mealType: 'dinner' },
+    { name: 'Omlet z warzywami', ingredients: 'Jajka 3 szt, papryka 80g, pomidor 80g', kcal: 340, carbs: 15, protein: 28, fat: 20, mealType: 'dinner' },
+    { name: 'Sałatka grecka z kurczakiem', ingredients: 'Kurczak 120g, warzywa 150g, ser 50g', kcal: 410, carbs: 18, protein: 42, fat: 20, mealType: 'dinner' },
+    
+    { name: 'Jogurt z orzechami', ingredients: 'Jogurt 200g, migdały 20g', kcal: 240, carbs: 24, protein: 12, fat: 12, mealType: 'snack' },
+    { name: 'Kanapka z serem', ingredients: 'Chleb 50g, ser biały 50g, pomidor 50g', kcal: 220, carbs: 28, protein: 14, fat: 5, mealType: 'snack' },
+    { name: 'Owoce z orzechami', ingredients: 'Jabłko 150g, orzechy 15g', kcal: 180, carbs: 25, protein: 3, fat: 10, mealType: 'snack' },
+    { name: 'Smoothie proteinowe', ingredients: 'Banan 120g, mleko 200ml', kcal: 280, carbs: 45, protein: 11, fat: 5, mealType: 'snack' }
+];
+
+// Initialize IndexedDB
+function initDB() {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+        
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => {
+            db = request.result;
+            resolve(db);
+        };
+        
+        request.onupgradeneeded = (event) => {
+            db = event.target.result;
+            
+            if (!db.objectStoreNames.contains('meals')) {
+                const mealStore = db.createObjectStore('meals', { keyPath: 'id', autoIncrement: true });
+                mealStore.createIndex('date', 'date', { unique: false });
+                mealStore.createIndex('mealType', 'mealType', { unique: false });
+            }
+            
+            if (!db.objectStoreNames.contains('settings')) {
+                db.createObjectStore('settings', { keyPath: 'key' });
+            }
+        };
+    });
+}
+
+// Settings management
+async function loadSettings() {
+    const defaults = {
+        dailyCalories: 1800,
+        dailyCarbs: 200,
+        dailyProtein: 90,
+        dailyFat: 60,
+        fastingStart: '17:00',
+        fastingEnd: '09:00',
+        breakfastTime: '09:00',
+        snack1Time: '11:30',
+        lunchTime: '13:00',
+        snack2Time: '15:30',
+        dinnerTime: '16:30'
+    };
+    
+    try {
+        const tx = db.transaction(['settings'], 'readonly');
+        const store = tx.objectStore('settings');
+        const settings = {};
+        
+        for (const key in defaults) {
+            const request = store.get(key);
+            const result = await new Promise((resolve) => {
+                request.onsuccess = () => resolve(request.result);
+            });
+            settings[key] = result ? result.value : defaults[key];
+        }
+        
+        return settings;
+    } catch (e) {
+        return defaults;
+    }
+}
+
+async function saveSetting(key, value) {
+    const tx = db.transaction(['settings'], 'readwrite');
+    const store = tx.objectStore('settings');
+    await store.put({ key, value });
+}
+
+// Meal management
+async function addMeal(mealData) {
+    const tx = db.transaction(['meals'], 'readwrite');
+    const store = tx.objectStore('meals');
+    const meal = {
+        ...mealData,
+        date: new Date().toISOString().split('T')[0],
+        timestamp: new Date().toISOString()
+    };
+    await store.add(meal);
+    return meal;
+}
+
+async function getTodayMeals() {
+    const today = new Date().toISOString().split('T')[0];
+    const tx = db.transaction(['meals'], 'readonly');
+    const store = tx.objectStore('meals');
+    const index = store.index('date');
+    const request = index.getAll(today);
+    
+    return new Promise((resolve) => {
+        request.onsuccess = () => resolve(request.result || []);
+    });
+}
+
+async function deleteMeal(id) {
+    const tx = db.transaction(['meals'], 'readwrite');
+    const store = tx.objectStore('meals');
+    await store.delete(id);
+}
+
+// UI State
+let currentView = 'diary';
+let currentMealType = 'breakfast';
+let selectedFood = null;
+let currentModalTab = 'ready';
+let selectedCategory = 'owoce';
+
+// Initialize app
+async function initApp() {
+    await initDB();
+    
+    const settings = await loadSettings();
+    updateSettingsUI(settings);
+    
+    updateClock();
+    setInterval(updateClock, 1000);
+    
+    updateFastingStatus();
+    setInterval(updateFastingStatus, 60000);
+    
+    await renderDiary();
+    
+    checkNotificationPermission();
+    
+    setTimeout(showInstallPrompt, 30000);
+    
+    scheduleNotifications();
+}
+
+// Clock
+function updateClock() {
+    const now = new Date();
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    document.getElementById('clock').textContent = `${hours}:${minutes}:${seconds}`;
+}
+
+// Fasting status
+async function updateFastingStatus() {
+    const settings = await loadSettings();
+    const now = new Date();
+    const currentTime = now.getHours() * 60 + now.getMinutes();
+    
+    const [startHour, startMin] = settings.fastingStart.split(':').map(Number);
+    const [endHour, endMin] = settings.fastingEnd.split(':').map(Number);
+    const startTime = startHour * 60 + startMin;
+    const endTime = endHour * 60 + endMin;
+    
+    let isFasting;
+    if (startTime > endTime) {
+        isFasting = currentTime >= startTime || currentTime < endTime;
+    } else {
+        isFasting = currentTime >= startTime && currentTime < endTime;
+    }
+    
+    const statusEl = document.getElementById('fastingStatus');
+    const timeEl = document.getElementById('fastingTime');
+    
+    if (isFasting) {
+        const endDateTime = new Date();
+        endDateTime.setHours(endHour, endMin, 0);
+        if (currentTime >= startTime) {
+            endDateTime.setDate(endDateTime.getDate() + 1);
+        }
+        
+        const diff = endDateTime - now;
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        
+        statusEl.textContent = '⏳ Post';
+        timeEl.textContent = `Do końca: ${hours}h ${minutes}min`;
+    } else {
+        statusEl.textContent = '✅ Okno żywieniowe';
+        timeEl.textContent = '';
+    }
+}
+
+// Render diary
+async function renderDiary() {
+    const meals = await getTodayMeals();
+    const settings = await loadSettings();
+    
+    const mealTypes = {
+        breakfast: { name: '🥐 Śniadanie', time: settings.breakfastTime },
+        snack1: { name: '🍎 Przekąska', time: settings.snack1Time },
+        lunch: { name: '🍽️ Obiad', time: settings.lunchTime },
+        snack2: { name: '🥤 Przekąska', time: settings.snack2Time },
+        dinner: { name: '🌙 Kolacja', time: settings.dinnerTime }
+    };
+    
+    const diaryEl = document.getElementById('diaryView');
+    diaryEl.innerHTML = '';
+    
+    for (const [type, info] of Object.entries(mealTypes)) {
+        const mealSection = document.createElement('div');
+        mealSection.className = 'meal-section';
+        
+        const typeMeals = meals.filter(m => m.mealType === type);
+        
+        mealSection.innerHTML = `
+            <div class="meal-header">
+                <div class="meal-time">${info.name} - ${info.time}</div>
+                <button class="add-btn" onclick="openAddModal('${type}')">+ Dodaj</button>
+            </div>
+            <div class="meal-items" id="meals-${type}">
+                ${typeMeals.length === 0 ? '<div style="padding: 15px; text-align: center; color: #999;">Brak posiłków</div>' : ''}
+            </div>
+        `;
+        
+        diaryEl.appendChild(mealSection);
+        
+        if (typeMeals.length > 0) {
+            const itemsContainer = mealSection.querySelector(`#meals-${type}`);
+            itemsContainer.innerHTML = '';
+            
+            typeMeals.forEach(meal => {
+                const item = document.createElement('div');
+                item.className = 'meal-item';
+                item.innerHTML = `
+                    <div class="item-info">
+                        <div class="item-name">${meal.name}</div>
+                        <div class="item-details">
+                            ${Math.round(meal.kcal)} kcal | W:${Math.round(meal.carbs)}g | B:${Math.round(meal.protein)}g | T:${Math.round(meal.fat)}g
+                        </div>
+                    </div>
+                    <button class="remove-btn" onclick="removeMeal(${meal.id})">🗑️</button>
+                `;
+                itemsContainer.appendChild(item);
+            });
+        }
+    }
+    
+    await updateStats();
+}
+
+// Update statistics  
+async function updateStats() {
+    const meals = await getTodayMeals();
+    const settings = await loadSettings();
+    
+    const totals = meals.reduce((acc, meal) => {
+        acc.kcal += meal.kcal;
+        acc.carbs += meal.carbs;
+        acc.protein += meal.protein;
+        acc.fat += meal.fat;
+        return acc;
+    }, { kcal: 0, carbs: 0, protein: 0, fat: 0 });
+    
+    document.getElementById('totalKcal').textContent = Math.round(totals.kcal);
+    document.getElementById('totalCarbs').textContent = Math.round(totals.carbs);
+    document.getElementById('totalProtein').textContent = Math.round(totals.protein);
+    document.getElementById('totalFat').textContent = Math.round(totals.fat);
+    
+    document.getElementById('targetKcal').textContent = settings.dailyCalories;
+    document.getElementById('targetCarbs').textContent = settings.dailyCarbs;
+    document.getElementById('targetProtein').textContent = settings.dailyProtein;
+    document.getElementById('targetFat').textContent = settings.dailyFat;
+    
+    const kcalPercent = Math.min((totals.kcal / settings.dailyCalories) * 100, 100);
+    const carbsPercent = Math.min((totals.carbs / settings.dailyCarbs) * 100, 100);
+    const proteinPercent = Math.min((totals.protein / settings.dailyProtein) * 100, 100);
+    const fatPercent = Math.min((totals.fat / settings.dailyFat) * 100, 100);
+    
+    const kcalProgress = document.getElementById('kcalProgress');
+    kcalProgress.style.width = kcalPercent + '%';
+    if (kcalPercent >= 90) {
+        kcalProgress.classList.add('warning');
+    } else {
+        kcalProgress.classList.remove('warning');
+    }
+    
+    document.getElementById('carbsProgress').style.width = carbsPercent + '%';
+    document.getElementById('proteinProgress').style.width = proteinPercent + '%';
+    document.getElementById('fatProgress').style.width = fatPercent + '%';
+    
+    const warningEl = document.getElementById('warningAlert');
+    if (kcalPercent >= 90) {
+        warningEl.classList.remove('hidden');
+        if (kcalPercent >= 100) {
+            warningEl.textContent = '🚨 Przekroczyłeś dzienny limit kalorii!';
+        } else {
+            warningEl.textContent = '⚠️ Zbliżasz się do dziennego limitu kalorii!';
+        }
+    } else {
+        warningEl.classList.add('hidden');
+    }
+}
+
+// Navigation
+function switchTab(tab) {
+    currentView = tab;
+    
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    event.target.closest('.nav-btn').classList.add('active');
+    
+    document.getElementById('diaryView').classList.toggle('hidden', tab !== 'diary');
+    document.getElementById('settingsView').classList.toggle('hidden', tab !== 'settings');
+    
+    if (tab === 'add') {
+        openAddModal('breakfast');
+    }
+}
+
+// Modal management
+function openAddModal(mealType) {
+    currentMealType = mealType;
+    document.getElementById('addModal').classList.add('active');
+    switchModalTab('ready');
+    renderReadyMeals();
+}
+
+function closeModal() {
+    document.getElementById('addModal').classList.remove('active');
+    selectedFood = null;
+    document.getElementById('portionSelector').classList.add('hidden');
+}
+
+function switchModalTab(tab) {
+    currentModalTab = tab;
+    
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    event.target.classList.add('active');
+    
+    document.getElementById('readyMealsTab').classList.toggle('hidden', tab !== 'ready');
+    document.getElementById('productsTab').classList.toggle('hidden', tab !== 'products');
+    document.getElementById('aiTab').classList.toggle('hidden', tab !== 'ai');
+    
+    if (tab === 'products') {
+        renderCategories();
+        renderProducts();
+    } else if (tab === 'ai') {
+        document.getElementById('aiInput').value = '';
+        document.getElementById('aiResults').classList.add('hidden');
+        document.getElementById('aiLoading').classList.add('hidden');
+    }
+}
+
+// Render ready meals
+function renderReadyMeals() {
+    const list = document.getElementById('readyMealsList');
+    list.innerHTML = '';
+    
+    READY_MEALS.forEach(meal => {
+        const item = document.createElement('div');
+        item.className = 'food-item';
+        item.onclick = () => addReadyMeal(meal);
+        item.innerHTML = `
+            <div class="food-name">${meal.name}</div>
+            <div style="font-size: 0.85em; color: #666; margin: 4px 0;">${meal.ingredients}</div>
+            <div class="food-nutrition">
+                ${meal.kcal} kcal | W:${meal.carbs}g | B:${meal.protein}g | T:${meal.fat}g
+            </div>
+        `;
+        list.appendChild(item);
+    });
+}
+
+async function addReadyMeal(meal) {
+    await addMeal({
+        mealType: currentMealType,
+        name: meal.name,
+        kcal: meal.kcal,
+        carbs: meal.carbs,
+        protein: meal.protein,
+        fat: meal.fat
+    });
+    
+    closeModal();
+    await renderDiary();
+}
+
+// Render products
+function renderCategories() {
+    const container = document.getElementById('categoryTabs');
+    container.innerHTML = '';
+    
+    for (const category in FOOD_DATABASE) {
+        const btn = document.createElement('button');
+        btn.className = 'category-tab';
+        if (category === selectedCategory) {
+            btn.classList.add('active');
+        }
+        btn.textContent = category.charAt(0).toUpperCase() + category.slice(1);
+        btn.onclick = () => {
+            selectedCategory = category;
+            renderCategories();
+            renderProducts();
+        };
+        container.appendChild(btn);
+    }
+}
+
+function renderProducts() {
+    const list = document.getElementById('productsList');
+    const search = document.getElementById('searchBox').value.toLowerCase();
+    list.innerHTML = '';
+    
+    const products = FOOD_DATABASE[selectedCategory] || [];
+    const filtered = products.filter(p => p.name.toLowerCase().includes(search));
+    
+    filtered.forEach(product => {
+        const item = document.createElement('div');
+        item.className = 'food-item';
+        if (selectedFood && selectedFood.name === product.name) {
+            item.classList.add('selected');
+        }
+        item.onclick = () => selectProduct(product);
+        item.innerHTML = `
+            <div class="food-name">${product.name}</div>
+            <div class="food-nutrition">
+                ${product.kcal} kcal/100g | W:${product.carbs}g | B:${product.protein}g | T:${product.fat}g
+            </div>
+        `;
+        list.appendChild(item);
+    });
+}
+
+function filterProducts() {
+    renderProducts();
+}
+
+function selectProduct(product) {
+    selectedFood = product;
+    document.getElementById('portionSelector').classList.remove('hidden');
+    document.getElementById('selectedProductName').textContent = product.name;
+    document.getElementById('portionInput').value = 100;
+    updateNutritionPreview();
+    renderProducts();
+}
+
+function updateNutritionPreview() {
+    if (!selectedFood) return;
+    
+    const portion = parseFloat(document.getElementById('portionInput').value) || 100;
+    const multiplier = portion / 100;
+    
+    const preview = document.getElementById('nutritionPreview');
+    preview.innerHTML = `
+        <strong>Wartości dla ${portion}g:</strong><br>
+        Kalorie: ${Math.round(selectedFood.kcal * multiplier)} kcal<br>
+        Węglowodany: ${Math.round(selectedFood.carbs * multiplier)}g<br>
+        Białko: ${Math.round(selectedFood.protein * multiplier)}g<br>
+        Tłuszcze: ${Math.round(selectedFood.fat * multiplier)}g
+    `;
+}
+
+async function addSelectedFood() {
+    if (!selectedFood) return;
+    
+    const portion = parseFloat(document.getElementById('portionInput').value) || 100;
+    const multiplier = portion / 100;
+    
+    await addMeal({
+        mealType: currentMealType,
+        name: `${selectedFood.name} (${portion}g)`,
+        kcal: selectedFood.kcal * multiplier,
+        carbs: selectedFood.carbs * multiplier,
+        protein: selectedFood.protein * multiplier,
+        fat: selectedFood.fat * multiplier
+    });
+    
+    closeModal();
+    await renderDiary();
+}
+
+async function removeMeal(id) {
+    if (confirm('Czy na pewno chcesz usunąć ten posiłek?')) {
+        await deleteMeal(id);
+        await renderDiary();
+    }
+}
+
+// Settings
+function updateSettingsUI(settings) {
+    document.getElementById('fastingEnd').value = settings.fastingEnd;
+    document.getElementById('fastingStart').value = settings.fastingStart;
+    document.getElementById('settingKcal').value = settings.dailyCalories;
+    document.getElementById('settingCarbs').value = settings.dailyCarbs;
+    document.getElementById('settingProtein').value = settings.dailyProtein;
+    document.getElementById('settingFat').value = settings.dailyFat;
+    document.getElementById('breakfastTime').value = settings.breakfastTime;
+    document.getElementById('snack1Time').value = settings.snack1Time;
+    document.getElementById('lunchTime').value = settings.lunchTime;
+    document.getElementById('snack2Time').value = settings.snack2Time;
+    document.getElementById('dinnerTime').value = settings.dinnerTime;
+}
+
+async function saveSettings() {
+    try {
+        await saveSetting('fastingEnd', document.getElementById('fastingEnd').value);
+        await saveSetting('fastingStart', document.getElementById('fastingStart').value);
+        await saveSetting('dailyCalories', parseInt(document.getElementById('settingKcal').value));
+        await saveSetting('dailyCarbs', parseInt(document.getElementById('settingCarbs').value));
+        await saveSetting('dailyProtein', parseInt(document.getElementById('settingProtein').value));
+        await saveSetting('dailyFat', parseInt(document.getElementById('settingFat').value));
+        await saveSetting('breakfastTime', document.getElementById('breakfastTime').value);
+        await saveSetting('snack1Time', document.getElementById('snack1Time').value);
+        await saveSetting('lunchTime', document.getElementById('lunchTime').value);
+        await saveSetting('snack2Time', document.getElementById('snack2Time').value);
+        await saveSetting('dinnerTime', document.getElementById('dinnerTime').value);
+        
+        const btn = document.getElementById('saveSettingsBtn');
+        const originalText = btn.textContent;
+        btn.textContent = '✅ Zapisano!';
+        btn.style.background = 'linear-gradient(135deg, #48bb78 0%, #38a169 100%)';
+        
+        setTimeout(() => {
+            btn.textContent = originalText;
+            btn.style.background = '';
+        }, 2000);
+        
+        await renderDiary();
+        updateFastingStatus();
+    } catch (error) {
+        console.error('Error saving settings:', error);
+        alert('❌ Błąd zapisu ustawień. Spróbuj ponownie.');
+    }
+}
+
+// AI Food Recognition
+let aiRecognizedItems = [];
+
+async function analyzeFood() {
+    const input = document.getElementById('aiInput').value.trim();
+    
+    if (!input) {
+        alert('⚠️ Proszę opisać co zjadłeś!');
+        return;
+    }
+    
+    document.getElementById('aiLoading').classList.remove('hidden');
+    document.getElementById('aiResults').classList.add('hidden');
+    
+    try {
+        const response = await fetch('https://api.anthropic.com/v1/messages', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'anthropic-version': '2023-06-01'
+            },
+            body: JSON.stringify({
+                model: 'claude-sonnet-4-20250514',
+                max_tokens: 1000,
+                messages: [{
+                    role: 'user',
+                    content: `Jestem aplikacją diet tracker. Użytkownik powiedział: "${input}"
+
+Rozpoznaj wszystkie produkty spożywcze i oszacuj ich gramatury. Zwróć TYLKO JSON w tym formacie (bez żadnego dodatkowego tekstu):
+{
+  "items": [
+    {"name": "nazwa produktu", "grams": liczba_gramów, "kcal": kalorie_na_100g, "carbs": węglowodany_na_100g, "protein": białko_na_100g, "fat": tłuszcze_na_100g}
+  ]
+}
+
+Używaj standardowych wartości odżywczych dla polskich produktów. Jeśli użytkownik nie podał gramów, oszacuj rozsądną porcję.`
+                }]
+            })
+        });
+
+        const data = await response.json();
+        
+        document.getElementById('aiLoading').classList.add('hidden');
+        
+        if (!data.content || !data.content[0]) {
+            throw new Error('Nieprawidłowa odpowiedź API');
+        }
+        
+        const text = data.content[0].text;
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        
+        if (!jsonMatch) {
+            throw new Error('Nie udało się rozpoznać produktów');
+        }
+        
+        const result = JSON.parse(jsonMatch[0]);
+        aiRecognizedItems = result.items || [];
+        
+        if (aiRecognizedItems.length === 0) {
+            alert('⚠️ Nie rozpoznano żadnych produktów. Spróbuj opisać dokładniej.');
+            return;
+        }
+        
+        displayAiResults();
+        
+    } catch (error) {
+        console.error('AI Analysis error:', error);
+        document.getElementById('aiLoading').classList.add('hidden');
+        alert('❌ Błąd rozpoznawania. Spróbuj ponownie lub dodaj produkty ręcznie.');
+    }
+}
+
+function displayAiResults() {
+    const resultsList = document.getElementById('aiResultsList');
+    resultsList.innerHTML = '';
+    
+    let totalKcal = 0;
+    let totalCarbs = 0;
+    let totalProtein = 0;
+    let totalFat = 0;
+    
+    aiRecognizedItems.forEach((item, index) => {
+        const multiplier = item.grams / 100;
+        const itemKcal = item.kcal * multiplier;
+        const itemCarbs = item.carbs * multiplier;
+        const itemProtein = item.protein * multiplier;
+        const itemFat = item.fat * multiplier;
+        
+        totalKcal += itemKcal;
+        totalCarbs += itemCarbs;
+        totalProtein += itemProtein;
+        totalFat += itemFat;
+        
+        const itemEl = document.createElement('div');
+        itemEl.style.cssText = 'padding: 10px; background: white; border-radius: 8px; margin-bottom: 10px;';
+        itemEl.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <strong>${item.name}</strong> (${item.grams}g)<br>
+                    <span style="font-size: 0.9em; color: #666;">
+                        ${Math.round(itemKcal)} kcal | W:${Math.round(itemCarbs)}g | B:${Math.round(itemProtein)}g | T:${Math.round(itemFat)}g
+                    </span>
+                </div>
+                <button onclick="removeAiItem(${index})" style="background: #ff6b6b; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer;">🗑️</button>
+            </div>
+        `;
+        resultsList.appendChild(itemEl);
+    });
+    
+    document.getElementById('aiTotalKcal').textContent = Math.round(totalKcal) + ' kcal';
+    document.getElementById('aiTotalCarbs').textContent = Math.round(totalCarbs);
+    document.getElementById('aiTotalProtein').textContent = Math.round(totalProtein);
+    document.getElementById('aiTotalFat').textContent = Math.round(totalFat);
+    
+    document.getElementById('aiResults').classList.remove('hidden');
+}
+
+function removeAiItem(index) {
+    aiRecognizedItems.splice(index, 1);
+    if (aiRecognizedItems.length === 0) {
+        document.getElementById('aiResults').classList.add('hidden');
+    } else {
+        displayAiResults();
+    }
+}
+
+async function confirmAiMeal() {
+    if (aiRecognizedItems.length === 0) {
+        return;
+    }
+    
+    let totalKcal = 0;
+    let totalCarbs = 0;
+    let totalProtein = 0;
+    let totalFat = 0;
+    
+    const itemNames = [];
+    
+    aiRecognizedItems.forEach(item => {
+        const multiplier = item.grams / 100;
+        totalKcal += item.kcal * multiplier;
+        totalCarbs += item.carbs * multiplier;
+        totalProtein += item.protein * multiplier;
+        totalFat += item.fat * multiplier;
+        itemNames.push(`${item.name} ${item.grams}g`);
+    });
+    
+    await addMeal({
+        mealType: currentMealType,
+        name: itemNames.join(', '),
+        kcal: totalKcal,
+        carbs: totalCarbs,
+        protein: totalProtein,
+        fat: totalFat
+    });
+    
+    aiRecognizedItems = [];
+    document.getElementById('aiInput').value = '';
+    document.getElementById('aiResults').classList.add('hidden');
+    closeModal();
+    await renderDiary();
+}
+
+// Notifications
+function checkNotificationPermission() {
+    if ('Notification' in window && Notification.permission === 'default') {
+        document.getElementById('notificationBanner').classList.remove('hidden');
+    }
+}
+
+async function requestNotificationPermission() {
+    const permission = await Notification.requestPermission();
+    if (permission === 'granted') {
+        document.getElementById('notificationBanner').classList.add('hidden');
+        scheduleNotifications();
+        alert('✅ Powiadomienia włączone!');
+    }
+}
+
+async function scheduleNotifications() {
+    if ('Notification' in window && Notification.permission === 'granted') {
+        const settings = await loadSettings();
+        const mealTimes = {
+            breakfast: settings.breakfastTime,
+            snack1: settings.snack1Time,
+            lunch: settings.lunchTime,
+            snack2: settings.snack2Time,
+            dinner: settings.dinnerTime
+        };
+        
+        setInterval(async () => {
+            const now = new Date();
+            const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+            
+            for (const [type, time] of Object.entries(mealTimes)) {
+                if (currentTime === time) {
+                    const meals = await getTodayMeals();
+                    const hasMeal = meals.some(m => m.mealType === type);
+                    
+                    if (!hasMeal) {
+                        showNotification(type);
+                    }
+                }
+            }
+        }, 60000);
+    }
+}
+
+function showNotification(mealType) {
+    const names = {
+        breakfast: '🥐 Śniadanie',
+        snack1: '🍎 Przekąska',
+        lunch: '🍽️ Obiad',
+        snack2: '🥤 Przekąska',
+        dinner: '🌙 Kolacja'
+    };
+    
+    if ('Notification' in window && Notification.permission === 'granted') {
+        const notification = new Notification('⏰ Czas na posiłek!', {
+            body: `Pora na ${names[mealType]}. Czy już zjadłeś?`,
+            icon: '/icon-192.png',
+            badge: '/icon-192.png',
+            vibrate: [200, 100, 200],
+            tag: mealType,
+            requireInteraction: true
+        });
+        
+        notification.onclick = () => {
+            window.focus();
+            openAddModal(mealType);
+            notification.close();
+        };
+    }
+}
+
+// PWA Install
+let deferredPrompt;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+});
+
+function showInstallPrompt() {
+    if (deferredPrompt && !localStorage.getItem('installDismissed')) {
+        document.getElementById('installPrompt').classList.add('active');
+    }
+}
+
+async function installApp() {
+    if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+            deferredPrompt = null;
+        }
+        document.getElementById('installPrompt').classList.remove('active');
+    }
+}
+
+function dismissInstall() {
+    document.getElementById('installPrompt').classList.remove('active');
+    localStorage.setItem('installDismissed', 'true');
+}
+
+// Listen for portion input changes
+document.addEventListener('DOMContentLoaded', () => {
+    const portionInput = document.getElementById('portionInput');
+    if (portionInput) {
+        portionInput.addEventListener('input', updateNutritionPreview);
+    }
+    
+    const saveBtn = document.getElementById('saveSettingsBtn');
+    if (saveBtn) {
+        saveBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            saveSettings();
+        });
+    }
+});
+
+// Start app
+initApp();
